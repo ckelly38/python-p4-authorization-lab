@@ -84,15 +84,31 @@ class CheckSession(Resource):
         
         return {}, 401
 
+class IsLoggedIn:
+    def isUserLoggedIn(self, msess):
+        if (msess == None): raise ValueError("msess must not be null!");
+        else:
+            user_id = session['user_id']
+            if user_id: return True;
+            else: return False;
+
+isli = IsLoggedIn();
+
 class MemberOnlyIndex(Resource):
     
     def get(self):
-        pass
+        if (isli.isUserLoggedIn(session)):
+            articles = [a.to_dict() for a in Article.query.all() if a.is_member_only]
+            return make_response(articles, 200);
+        else: return {}, 401
 
 class MemberOnlyArticle(Resource):
     
     def get(self, id):
-        pass
+        if (isli.isUserLoggedIn(session)):
+            article = Article.query.filter(Article.id == id).first();
+            return make_response(article.to_dict(), 200);
+        else: return {}, 401
 
 api.add_resource(ClearSession, '/clear', endpoint='clear')
 api.add_resource(IndexArticle, '/articles', endpoint='article_list')
